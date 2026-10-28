@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُنظّم - منصة إدارة الوقت والإنتاجية</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            primary: '#6366f1',
+                            secondary: '#a855f7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            font-family: 'Tajawal', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        /* Circular Progress for Pomodoro */
+        .circle-progress {
+            transition: stroke-dashoffset 0.5s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header / Navigation bar -->
+    <header class="sticky top-0 z-40 glass border-b border-gray-200 dark:border-gray-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid font-bold text-xl fa-clock"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">مُنظّم</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">مساعدك الذكي لإدارة الوقت والإنتاجية</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="hidden md:flex items-center space-x-1 space-x-reverse bg-gray-100 dark:bg-gray-900/80 p-1 rounded-xl border border-gray-200 dark:border-gray-800">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 space-x-reverse bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                    <i class="fa-solid fa-chart-pie"></i><span>اللوحة الرئيسية</span>
+                </button>
+                <button onclick="switchTab('pomodoro')" id="nav-pomodoro" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 space-x-reverse text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                    <i class="fa-solid fa-stopwatch"></i><span>مؤقت البومودورو</span>
+                </button>
+                <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 space-x-reverse text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                    <i class="fa-solid fa-list-check"></i><span>إدارة المهام</span>
+                </button>
+                <button onclick="switchTab('eisenhower')" id="nav-eisenhower" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 space-x-reverse text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                    <i class="fa-solid fa-table-cells-large"></i><span>مصفوفة الأولويات</span>
+                </button>
+                <button onclick="switchTab('habits')" id="nav-habits" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 space-x-reverse text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                    <i class="fa-solid fa-fire"></i><span>تتبع العادات</span>
+                </button>
+            </nav>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center" title="تغيير الثيم">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <!-- Sound Generator Drawer Toggle -->
+                <button onclick="toggleAmbientModal()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center relative" title="أصوات التركيز المحيطية">
+                    <i class="fa-solid fa-headphones"></i>
+                    <span id="ambient-indicator" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                </button>
+                <!-- Data Export / Import Modal Trigger -->
+                <button onclick="toggleDataModal()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center" title="نسخ احتياطي للبيانات">
+                    <i class="fa-solid fa-database"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Nav bar -->
+        <div class="md:hidden flex justify-around border-t border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 py-2">
+            <button onclick="switchTab('dashboard')" class="mobile-nav-btn text-xs font-semibold flex flex-col items-center text-indigo-600 dark:text-indigo-400">
+                <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>الرئيسية
+            </button>
+            <button onclick="switchTab('pomodoro')" class="mobile-nav-btn text-xs font-semibold flex flex-col items-center text-gray-500 dark:text-gray-400">
+                <i class="fa-solid fa-stopwatch text-base mb-0.5"></i>بومودورو
+            </button>
+            <button onclick="switchTab('tasks')" class="mobile-nav-btn text-xs font-semibold flex flex-col items-center text-gray-500 dark:text-gray-400">
+                <i class="fa-solid fa-list-check text-base mb-0.5"></i>المهام
+            </button>
+            <button onclick="switchTab('eisenhower')" class="mobile-nav-btn text-xs font-semibold flex flex-col items-center text-gray-500 dark:text-gray-400">
+                <i class="fa-solid fa-table-cells-large text-base mb-0.5"></i>الأولويات
+            </button>
+            <button onclick="switchTab('habits')" class="mobile-nav-btn text-xs font-semibold flex flex-col items-center text-gray-500 dark:text-gray-400">
+                <i class="fa-solid fa-fire text-base mb-0.5"></i>العادات
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= Tab 1: Dashboard ================= -->
+        <section id="tab-dashboard" class="tab-content space-y-8">
+            <!-- Greeting & Live Quote -->
+            <div class="glass p-6 sm:p-8 rounded-3xl border border-gray-200/80 dark:border-gray-800 shadow-sm relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">مرحباً بك مجدداً 👋</h2>
+                        <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm sm:text-base" id="daily-quote">"السر في إنجاز الأشياء هو البدء فيها."</p>
+                    </div>
+                    <div class="flex items-center space-x-3 space-x-reverse bg-indigo-50 dark:bg-indigo-950/50 p-3 rounded-2xl border border-indigo-100 dark:border-indigo-900/50">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xl">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-indigo-600 dark:text-indigo-400 font-bold block">مستوى الإنتاجية اليوم</span>
+                            <span class="text-lg font-extrabold" id="dashboard-productivity-score">85%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Stat Card 1 -->
+                <div class="glass p-5 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center space-x-4 space-x-reverse">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">المهام المكتملة</p>
+                        <h3 class="text-2xl font-extrabold mt-0.5" id="stat-completed-tasks">0/0</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 2 -->
+                <div class="glass p-5 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center space-x-4 space-x-reverse">
+                    <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">جلسات التركيز (بومودورو)</p>
+                        <h3 class="text-2xl font-extrabold mt-0.5" id="stat-pomo-count">0</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 3 -->
+                <div class="glass p-5 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center space-x-4 space-x-reverse">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">إجمالي ساعات التركيز</p>
+                        <h3 class="text-2xl font-extrabold mt-0.5" id="stat-focus-hours">0 دقيقة</h3>
+                    </div>
+                </div>
+                <!-- Stat Card 4 -->
+                <div class="glass p-5 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center space-x-4 space-x-reverse">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">أعلى سلسلة عادات</p>
+                        <h3 class="text-2xl font-extrabold mt-0.5" id="stat-best-streak">0 أيام</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Chart -->
+                <div class="lg:col-span-2 glass p-6 rounded-3xl border border-gray-200/80 dark:border-gray-800">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-lg flex items-center space-x-2 space-x-reverse">
+                            <i class="fa-solid fa-chart-column text-indigo-500"></i>
+                            <span>ساعات التركيز اليومية هذا الأسبوع</span>
+                        </h3>
+                    </div>
+                    <div class="h-64 relative">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+                <!-- Category Doughnut Chart -->
+                <div class="glass p-6 rounded-3xl border border-gray-200/80 dark:border-gray-800 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg flex items-center space-x-2 space-x-reverse">
+                            <i class="fa-solid fa-chart-pie text-violet-500"></i>
+                            <span>توزيع المهام حسب الفئة</span>
+                        </h3>
+                    </div>
+                    <div class="h-56 relative flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Tab 2: Pomodoro Timer ================= -->
+        <section id="tab-pomodoro" class="tab-content hidden space-y-8">
+            <div class="max-w-2xl mx-auto text-center space-y-6">
+                <!-- Modes selector -->
+                <div class="inline-flex p-1.5 rounded-2xl bg-gray-200/60 dark:bg-gray-900 border border-gray-300/40 dark:border-gray-800">
+                    <button onclick="setPomodoroMode('work')" id="pomo-mode-work" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all bg-indigo-600 text-white shadow-md">تركيز (25د)</button>
+                    <button onclick="setPomodoroMode('shortBreak')" id="pomo-mode-short" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all text-gray-600 dark:text-gray-400 hover:text-indigo-600">استراحة قصيرة (5د)</button>
+                    <button onclick="setPomodoroMode('longBreak')" id="pomo-mode-long" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all text-gray-600 dark:text-gray-400 hover:text-indigo-600">استراحة طويلة (15د)</button>
+                </div>
+
+                <!-- Circular Timer Display -->
+                <div class="relative w-72 h-72 sm:w-80 sm:h-80 mx-auto flex items-center justify-center">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-gray-200 dark:text-gray-800" stroke-width="6" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                        <circle id="pomo-progress" class="text-indigo-600 dark:text-indigo-500 circle-progress" stroke-width="6" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" stroke-dasharray="263.89" stroke-dashoffset="0" />
+                    </svg>
+                    <div class="absolute flex flex-col items-center">
+                        <span id="pomo-timer-display" class="text-5xl sm:text-6xl font-black tracking-tight font-mono">25:00</span>
+                        <span id="pomo-status-label" class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-2">حان وقت الإنجاز والتركيز!</span>
+                    </div>
+                </div>
+
+                <!-- Timer Controls -->
+                <div class="flex items-center justify-center space-x-4 space-x-reverse">
+                    <button id="pomo-start-btn" onclick="togglePomodoro()" class="w-16 h-16 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/30 flex items-center justify-center text-2xl transition transform active:scale-95">
+                        <i class="fa-solid fa-play ml-0.5"></i>
+                    </button>
+                    <button onclick="resetPomodoro()" class="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-lg transition">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button onclick="openPomodoroSettings()" class="w-12 h-12 rounded-2xl bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-lg transition" title="إعدادات المؤقت">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Tab 3: Tasks Manager ================= -->
+        <section id="tab-tasks" class="tab-content hidden space-y-6">
+            <!-- Add Task Bar -->
+            <div class="glass p-4 rounded-2xl border border-gray-200/80 dark:border-gray-800">
+                <form id="add-task-form" onsubmit="handleAddTask(event)" class="flex flex-col md:flex-row gap-3">
+                    <input type="text" id="task-title-input" placeholder="ما الذي تخطط لإنجازه اليوم؟" required class="flex-grow bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="flex gap-2">
+                        <select id="task-category-input" class="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="عمل">💼 عمل</option>
+                            <option value="دراسة">📚 دراسة</option>
+                            <option value="شخصي">👤 شخصي</option>
+                            <option value="صحة">🌿 صحة</option>
+                        </select>
+                        <select id="task-priority-input" class="bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="عالية">🔴 عالية</option>
+                            <option value="متوسطة" selected>🟡 متوسطة</option>
+                            <option value="منخفضة">🟢 منخفضة</option>
+                        </select>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center justify-center space-x-1 space-x-reverse whitespace-nowrap">
+                            <i class="fa-solid fa-plus"></i><span>إضافة</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <button onclick="filterTasks('all')" id="filter-all" class="task-filter-btn active px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">الكل</button>
+                    <button onclick="filterTasks('active')" id="filter-active" class="task-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">قيد التنفيذ</button>
+                    <button onclick="filterTasks('completed')" id="filter-completed" class="task-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400">المكتملة</button>
+                </div>
+            </div>
+
+            <!-- Task List Container -->
+            <div id="tasks-container" class="space-y-3">
+                <!-- Task items dynamically loaded -->
+            </div>
+        </section>
+
+        <!-- ================= Tab 4: Eisenhower Matrix ================= -->
+        <section id="tab-eisenhower" class="tab-content hidden space-y-6">
+            <div class="text-center max-w-xl mx-auto mb-4">
+                <h2 class="text-xl font-bold">مصفوفة آيزنهاور للأولويات</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">صنف مهامك بناءً على الأهمية والاستعجال لاتخاذ القرارات الأفضل.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Q1: Urgent & Important -->
+                <div class="glass p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-50/20 dark:bg-rose-950/10 min-h-[220px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-rose-200 dark:border-rose-900 pb-2">
+                        <span class="font-bold text-rose-600 dark:text-rose-400 text-sm flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved"></i> هامة وعاجلة (افعلها فوراً)</span>
+                    </div>
+                    <div id="matrix-q1" class="space-y-2"></div>
+                </div>
+                <!-- Q2: Important Not Urgent -->
+                <div class="glass p-5 rounded-2xl border-2 border-indigo-500/40 bg-indigo-50/20 dark:bg-indigo-950/10 min-h-[220px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-indigo-200 dark:border-indigo-900 pb-2">
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-check"></i> هامة وغير عاجلة (خطط لها)</span>
+                    </div>
+                    <div id="matrix-q2" class="space-y-2"></div>
+                </div>
+                <!-- Q3: Urgent Not Important -->
+                <div class="glass p-5 rounded-2xl border-2 border-amber-500/40 bg-amber-50/20 dark:bg-amber-950/10 min-h-[220px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-amber-200 dark:border-amber-900 pb-2">
+                        <span class="font-bold text-amber-600 dark:text-amber-400 text-sm flex items-center gap-2"><i class="fa-solid fa-user-gear"></i> غير هامة وعاجلة (فوضها)</span>
+                    </div>
+                    <div id="matrix-q3" class="space-y-2"></div>
+                </div>
+                <!-- Q4: Not Urgent Not Important -->
+                <div class="glass p-5 rounded-2xl border-2 border-gray-400/40 bg-gray-50/20 dark:bg-gray-800/20 min-h-[220px]">
+                    <div class="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
+                        <span class="font-bold text-gray-500 dark:text-gray-400 text-sm flex items-center gap-2"><i class="fa-solid fa-trash-can"></i> غير هامة وغير عاجلة (احذفها)</span>
+                    </div>
+                    <div id="matrix-q4" class="space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Tab 5: Habit Tracker ================= -->
+        <section id="tab-habits" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold">متتبع العادات اليومية</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">التكرار اليومي هو مفتاح بناء العادات الإيجابية المستمرة.</p>
+                </div>
+                <button onclick="openAddHabitModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i><span>إضافة عادة جديدة</span>
+                </button>
+            </div>
+
+            <!-- Habits Grid -->
+            <div id="habits-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Habit items dynamically loaded -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 py-6 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p>مصمم بكل شغف لمساعدتك على تحسين إنتاجيتك واستغلال وقتك بأفضل صورة 🚀</p>
+    </footer>
+
+    <!-- ================= MODALS & DRAWERS ================= -->
+
+    <!-- Ambient Sound Generator Drawer Modal -->
+    <div id="ambient-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass max-w-md w-full p-6 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-5">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-headphones text-indigo-500"></i> أصوات المحيط للتمركز</h3>
+                <button onclick="toggleAmbientModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Rain Sound -->
+                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-900 p-3 rounded-2xl">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <i class="fa-solid fa-cloud-showers-heavy text-indigo-500 text-xl"></i>
+                        <span class="text-sm font-semibold">صوت المطر</span>
+                    </div>
+                    <button onclick="toggleSound('rain')" id="sound-btn-rain" class="px-4 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-bold">تشغيل</button>
+                </div>
+
+                <!-- Waves Sound -->
+                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-900 p-3 rounded-2xl">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <i class="fa-solid fa-water text-cyan-500 text-xl"></i>
+                        <span class="text-sm font-semibold">أمواج البحر</span>
+                    </div>
+                    <button onclick="toggleSound('waves')" id="sound-btn-waves" class="px-4 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-bold">تشغيل</button>
+                </div>
+
+                <!-- White Noise -->
+                <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-900 p-3 rounded-2xl">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <i class="fa-solid fa-wind text-gray-400 text-xl"></i>
+                        <span class="text-sm font-semibold">الضوضاء البيضاء</span>
+                    </div>
+                    <button onclick="toggleSound('whitenoise')" id="sound-btn-whitenoise" class="px-4 py-1.5 rounded-xl bg-gray-200 dark:bg-gray-800 text-xs font-bold">تشغيل</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Import / Export Modal -->
+    <div id="data-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass max-w-md w-full p-6 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-5">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-database text-indigo-500"></i> النسخ الاحتياطي والبيانات</h3>
+                <button onclick="toggleDataModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <p class="text-xs text-gray-500 dark:text-gray-400">تتم حفظ جميع بياناتك محلياً على متصفحك. يمكنك تصدير بياناتك أو استردادها في أي وقت.</p>
+
+            <div class="space-y-3">
+                <button onclick="exportData()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> تصدير البيانات (JSON)
+                </button>
+                
+                <label class="w-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 font-bold py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-upload"></i> استيراد البيانات
+                    <input type="file" id="import-file" onchange="importData(event)" accept=".json" class="hidden">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Habit Modal -->
+    <div id="habit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass max-w-md w-full p-6 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-2">
+                <h3 class="font-bold text-lg">إضافة عادة جديدة</h3>
+                <button onclick="closeAddHabitModal()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleAddHabit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold mb-1">اسم العادة</label>
+                    <input type="text" id="habit-name-input" placeholder="مثال: القراءة لمدة 20 دقيقة" required class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">الأيقونة</label>
+                    <select id="habit-icon-input" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl px-3 py-2 text-sm">
+                        <option value="fa-book">📚 كتاب / قراءة</option>
+                        <option value="fa-dumbbell">🏋️ رياضة</option>
+                        <option value="fa-droplet">💧 شرب ماء</option>
+                        <option value="fa-brain">🧘 تأمل / تركيز</option>
+                        <option value="fa-code">💻 برمجة / تعلم</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-indigo-700">إضافة العادة</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT APP LOGIC ================= -->
+    <script>
+        // State Storage Management
+        const STORAGE_KEY = 'monazzam_app_data';
+
+        let appData = {
+            tasks: [
+                { id: 1, title: 'إكمال مشروع البرمجة', category: 'عمل', priority: 'عالية', completed: false, created: new Date().toISOString() },
+                { id: 2, title: 'قراءة الفصل الثالث من الكتاب', category: 'دراسة', priority: 'متوسطة', completed: true, created: new Date().toISOString() }
+            ],
+            habits: [
+                { id: 1, name: 'شرب 2 لتر ماء', icon: 'fa-droplet', streak: 4, completedToday: false },
+                { id: 2, name: 'ممارسة الرياضة 30 دقيقة', icon: 'fa-dumbbell', streak: 2, completedToday: true }
+            ],
+            pomodoroStats: {
+                completedSessions: 5,
+                totalFocusMinutes: 125,
+                weeklyData: [30, 45, 60, 25, 50, 90, 40]
+            },
+            settings: {
+                workDuration: 25,
+                shortBreak: 5,
+                longBreak: 15
+            }
+        };
+
+        // Load Saved Data
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Failed to parse stored data", e);
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            updateDashboardStats();
+        }
+
+        // --- Navigation ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-gray-800', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'dark:bg-gray-800', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                activeBtn.classList.remove('text-gray-600', 'dark:text-gray-400');
+            }
+
+            if (tabId === 'dashboard') initCharts();
+            if (tabId === 'eisenhower') renderEisenhower();
+        }
+
+        // --- Dark Theme Toggle ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-sun';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-moon';
+            }
+        }
+
+        // --- Pomodoro Logic ---
+        let pomoMode = 'work'; // work, shortBreak, longBreak
+        let pomoTimeLeft = 25 * 60;
+        let pomoTimerId = null;
+        let isPomoRunning = false;
+
+        function setPomodoroMode(mode) {
+            pomoMode = mode;
+            clearInterval(pomoTimerId);
+            isPomoRunning = false;
+            updatePomoPlayButton();
+
+            if (mode === 'work') pomoTimeLeft = appData.settings.workDuration * 60;
+            if (mode === 'shortBreak') pomoTimeLeft = appData.settings.shortBreak * 60;
+            if (mode === 'longBreak') pomoTimeLeft = appData.settings.longBreak * 60;
+
+            updatePomoDisplay();
+        }
+
+        function togglePomodoro() {
+            if (isPomoRunning) {
+                clearInterval(pomoTimerId);
+                isPomoRunning = false;
+            } else {
+                isPomoRunning = true;
+                pomoTimerId = setInterval(() => {
+                    if (pomoTimeLeft > 0) {
+                        pomoTimeLeft--;
+                        updatePomoDisplay();
+                    } else {
+                        clearInterval(pomoTimerId);
+                        isPomoRunning = false;
+                        playChime();
+                        if (pomoMode === 'work') {
+                            appData.pomodoroStats.completedSessions++;
+                            appData.pomodoroStats.totalFocusMinutes += appData.settings.workDuration;
+                            saveData();
+                        }
+                        alert('انتهت الجلسة! خذ قسطاً من الراحة أو ابدأ مجدداً.');
+                    }
+                }, 1000);
+            }
+            updatePomoPlayButton();
+        }
+
+        function resetPomodoro() {
+            setPomodoroMode(pomoMode);
+        }
+
+        function updatePomoDisplay() {
+            const min = Math.floor(pomoTimeLeft / 60).toString().padStart(2, '0');
+            const sec = (pomoTimeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('pomo-timer-display').innerText = `${min}:${sec}`;
+
+            // Progress stroke ring
+            let totalSec = appData.settings.workDuration * 60;
+            if (pomoMode === 'shortBreak') totalSec = appData.settings.shortBreak * 60;
+            if (pomoMode === 'longBreak') totalSec = appData.settings.longBreak * 60;
+
+            const progressCircle = document.getElementById('pomo-progress');
+            const offset = 263.89 * (1 - pomoTimeLeft / totalSec);
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function updatePomoPlayButton() {
+            const btn = document.getElementById('pomo-start-btn');
+            btn.innerHTML = isPomoRunning ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play ml-0.5"></i>';
+        }
+
+        // Web Audio Chime Sound
+        function playChime() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 1.5);
+            } catch(e) {}
+        }
+
+        // --- Task Manager ---
+        function renderTasks(filter = 'all') {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+
+            let filtered = appData.tasks;
+            if (filter === 'active') filtered = appData.tasks.filter(t => !t.completed);
+            if (filter === 'completed') filtered = appData.tasks.filter(t => t.completed);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400 text-sm">لا يوجد مهام حالياً</div>`;
+                return;
+            }
+
+            filtered.forEach(task => {
+                const el = document.createElement('div');
+                el.className = `glass p-4 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center justify-between transition ${task.completed ? 'opacity-60' : ''}`;
+                el.innerHTML = `
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <button onclick="toggleTask(${task.id})" class="w-6 h-6 rounded-lg border-2 border-indigo-500 flex items-center justify-center text-xs ${task.completed ? 'bg-indigo-600 text-white' : ''}">
+                            ${task.completed ? '<i class="fa-solid fa-check"></i>' : ''}
+                        </button>
+                        <div>
+                            <span class="font-bold text-sm ${task.completed ? 'line-through text-gray-400' : ''}">${task.title}</span>
+                            <div class="flex items-center space-x-2 space-x-reverse text-xs mt-1">
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-semibold">${task.category}</span>
+                                <span class="text-gray-400">• أولوية: ${task.priority}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-gray-400 hover:text-rose-500 transition px-2 py-1"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function handleAddTask(e) {
+            e.preventDefault();
+            const title = document.getElementById('task-title-input').value;
+            const category = document.getElementById('task-category-input').value;
+            const priority = document.getElementById('task-priority-input').value;
+
+            appData.tasks.push({
+                id: Date.now(),
+                title,
+                category,
+                priority,
+                completed: false,
+                created: new Date().toISOString()
+            });
+
+            document.getElementById('task-title-input').value = '';
+            saveData();
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            const task = appData.tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveData();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            appData.tasks = appData.tasks.filter(t => t.id !== id);
+            saveData();
+            renderTasks();
+        }
+
+        function filterTasks(type) {
+            document.querySelectorAll('.task-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-800', 'text-gray-600', 'dark:text-gray-400');
+            });
+            document.getElementById(`filter-${type}`).classList.add('bg-indigo-600', 'text-white');
+            renderTasks(type);
+        }
+
+        // --- Eisenhower Matrix ---
+        function renderEisenhower() {
+            const q1 = document.getElementById('matrix-q1');
+            const q2 = document.getElementById('matrix-q2');
+            const q3 = document.getElementById('matrix-q3');
+            const q4 = document.getElementById('matrix-q4');
+
+            [q1, q2, q3, q4].forEach(el => el.innerHTML = '');
+
+            appData.tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'bg-white dark:bg-gray-900 p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-semibold flex items-center justify-between';
+                item.innerHTML = `<span>${task.title}</span> <span class="text-gray-400">${task.category}</span>`;
+
+                if (task.priority === 'عالية') q1.appendChild(item);
+                else if (task.priority === 'متوسطة') q2.appendChild(item);
+                else q3.appendChild(item);
+            });
+        }
+
+        // --- Habit Tracker ---
+        function renderHabits() {
+            const container = document.getElementById('habits-container');
+            container.innerHTML = '';
+
+            appData.habits.forEach(habit => {
+                const card = document.createElement('div');
+                card.className = 'glass p-5 rounded-2xl border border-gray-200/80 dark:border-gray-800 flex items-center justify-between';
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4 space-x-reverse">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                            <i class="fa-solid ${habit.icon}"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">${habit.name}</h4>
+                            <p class="text-xs text-amber-500 font-semibold mt-0.5"><i class="fa-solid fa-fire ml-1"></i>سلسلة ${habit.streak} أيام</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleHabit(${habit.id})" class="px-4 py-2 rounded-xl font-bold text-xs transition ${habit.completedToday ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}">
+                        ${habit.completedToday ? 'مكتملة ✓' : 'إنجاز العادة'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleHabit(id) {
+            const habit = appData.habits.find(h => h.id === id);
+            if (habit) {
+                habit.completedToday = !habit.completedToday;
+                if (habit.completedToday) habit.streak++;
+                else habit.streak = Math.max(0, habit.streak - 1);
+                saveData();
+                renderHabits();
+            }
+        }
+
+        function openAddHabitModal() { document.getElementById('habit-modal').classList.remove('hidden'); }
+        function closeAddHabitModal() { document.getElementById('habit-modal').classList.add('hidden'); }
+
+        function handleAddHabit(e) {
+            e.preventDefault();
+            const name = document.getElementById('habit-name-input').value;
+            const icon = document.getElementById('habit-icon-input').value;
+
+            appData.habits.push({
+                id: Date.now(),
+                name,
+                icon,
+                streak: 0,
+                completedToday: false
+            });
+
+            closeAddHabitModal();
+            saveData();
+            renderHabits();
+        }
+
+        // --- Ambient Sound Player (Synthesized Web Audio) ---
+        let activeSounds = {};
+
+        function toggleAmbientModal() {
+            document.getElementById('ambient-modal').classList.toggle('hidden');
+        }
+
+        function toggleSound(type) {
+            const btn = document.getElementById(`sound-btn-${type}`);
+            if (activeSounds[type]) {
+                activeSounds[type].stop();
+                delete activeSounds[type];
+                btn.innerText = 'تشغيل';
+                btn.classList.remove('bg-emerald-600', 'text-white');
+            } else {
+                const sound = createNoiseGenerator(type);
+                if (sound) {
+                    activeSounds[type] = sound;
+                    btn.innerText = 'إيقاف';
+                    btn.classList.add('bg-emerald-600', 'text-white');
+                }
+            }
+
+            const indicator = document.getElementById('ambient-indicator');
+            if (Object.keys(activeSounds).length > 0) indicator.classList.remove('hidden');
+            else indicator.classList.add('hidden');
+        }
+
+        function createNoiseGenerator(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = ctx.sampleRate * 2;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                const whiteNoise = ctx.createBufferSource();
+                whiteNoise.buffer = buffer;
+                whiteNoise.loop = true;
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+
+                whiteNoise.connect(gain);
+                gain.connect(ctx.destination);
+                whiteNoise.start();
+
+                return {
+                    stop: () => {
+                        whiteNoise.stop();
+                        ctx.close();
+                    }
+                };
+            } catch(e) {
+                return null;
+            }
+        }
+
+        // --- Data Backup / Import ---
+        function toggleDataModal() {
+            document.getElementById('data-modal').classList.toggle('hidden');
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "monazzam_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    appData = JSON.parse(e.target.result);
+                    saveData();
+                    location.reload();
+                } catch(err) {
+                    alert('الملف غير صالح');
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        // --- Dashboard Update & Analytics ---
+        function updateDashboardStats() {
+            const completed = appData.tasks.filter(t => t.completed).length;
+            const total = appData.tasks.length;
+            document.getElementById('stat-completed-tasks').innerText = `${completed}/${total}`;
+            document.getElementById('stat-pomo-count').innerText = appData.pomodoroStats.completedSessions;
+            document.getElementById('stat-focus-hours').innerText = `${appData.pomodoroStats.totalFocusMinutes} دقيقة`;
+            
+            const maxStreak = appData.habits.reduce((max, h) => Math.max(max, h.streak), 0);
+            document.getElementById('stat-best-streak').innerText = `${maxStreak} أيام`;
+
+            const score = total > 0 ? Math.round((completed / total) * 100) : 100;
+            document.getElementById('dashboard-productivity-score').innerText = `${score}%`;
+        }
+
+        let weeklyChartObj = null;
+        let categoryChartObj = null;
+
+        function initCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+
+            // Weekly Chart
+            const ctx1 = document.getElementById('weeklyChart').getContext('2d');
+            if (weeklyChartObj) weeklyChartObj.destroy();
+            weeklyChartObj = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+                    datasets: [{
+                        label: 'دقائق التركيز',
+                        data: appData.pomodoroStats.weeklyData,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: textColor } },
+                        y: { ticks: { color: textColor } }
+                    }
+                }
+            });
+
+            // Category Chart
+            const ctx2 = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartObj) categoryChartObj.destroy();
+
+            const cats = {};
+            appData.tasks.forEach(t => cats[t.category] = (cats[t.category] || 0) + 1);
+
+            categoryChartObj = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(cats).length ? Object.keys(cats) : ['عمل'],
+                    datasets: [{
+                        data: Object.keys(cats).length ? Object.values(cats) : [1],
+                        backgroundColor: ['#6366f1', '#a855f7', '#ec4899', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: textColor } } }
+                }
+            });
+        }
+
+        // Init App
+        window.onload = function() {
+            loadData();
+            renderTasks();
+            renderHabits();
+            updateDashboardStats();
+            initCharts();
+        };
+    </script>
+</body>
+</html>
